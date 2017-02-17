@@ -1,0 +1,13 @@
+{
+  "esversion": 6,
+  "asi": true,
+  "node": true,
+  "bitwise": true,
+  "eqeqeq": true,
+  "latedef": "nofunc",
+  "mocha": true,
+  "noarg": true,
+  "undef": true,
+  "smarttabs": true,
+  "debug": true
+}

@@ -1,0 +1,33 @@
+{
+  "extends": ["airbnb/base"],
+  "extensions": [
+    ".es6",
+    ".js",
+    ".jsx"
+  ],
+  "rules": {
+    "no-use-before-define": [2, "nofunc"],
+    "vars-on-top": 0,
+    "comma-dangle": [2, "never"],
+    "no-param-reassign": 0,
+    "strict": 0,
+    "valid-jsdoc": 1,
+    "require-jsdoc": 1,
+    "no-underscore-dangle": [0],
+    "newline-per-chained-call": [0],
+    "import/no-unresolved": [2, {commonjs: true, amd: true}]
+  },
+  "ecmaFeatures": {
+    "generators": true
+  },
+  "globals": {
+    "describe": true,
+    "it": true,
+    "xdescribe": true,
+    "xit": true,
+    "before": true,
+    "after": true,
+    "beforeEach": true,
+    "afterEach": true
+  }
+}

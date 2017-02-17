@@ -1,0 +1,63 @@
+{
+  "name": "@chauffeur-prive/cp-worker",
+  "version": "1.0.0",
+  "description": "AMQP worker library",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "amqplib": "0.5.1",
+    "chpr-logger": "2.4.1",
+    "chpr-metrics": "1.1.0",
+    "co": "4.6.0",
+    "joi": "10.2.1",
+    "lodash": "~4.14.2",
+    "throng": "4.0.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "co-mocha": "^1.1.3",
+    "co-supertest": "0.0.10",
+    "dirty-chai": "1.2.2",
+    "eslint": "^2.13.1",
+    "eslint-config-airbnb": "~9.0.1",
+    "eslint-config-cp": "~1.4.0",
+    "eslint-plugin-import": "~1.14.0",
+    "eslint-plugin-jsx-a11y": "~1.5.5",
+    "eslint-plugin-react": "~5.2.2",
+    "istanbul": "^0.4.4",
+    "jsdoc": "^3.4.0",
+    "minami": "^1.1.1",
+    "mocha": "^3.0.2",
+    "mocha-only-detector": "0.1.0",
+    "objectid": "^3.2.1",
+    "sinon": "^1.17.5",
+    "sinon-chai": "2.8.0",
+    "superagent": "1.7.2",
+    "supertest": "^1.2.0"
+  },
+  "scripts": {
+    "pretest": "npm run lint",
+    "test": "LOG_LEVEL=info NODE_ENV=test istanbul cover _mocha --include-all-sources --root ./lib -x \"**/public/**\" -x \"**/legacy/**\" -- --recursive",
+    "mocha": "LOG_LEVEL=info NODE_ENV=test mocha test/ --recursive --bail",
+    "lint": "eslint .",
+    "doc": "./node_modules/jsdoc/jsdoc.js --configure .jsdoc.json -R README.md ./lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/transcovo/cp-worker.git",
+    "private": true
+  },
+  "keywords": [
+    "worker",
+    "AMQP",
+    "lib"
+  ],
+  "author": "Thomas Marcon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/transcovo/cp-worker/issues"
+  },
+  "homepage": "https://github.com/transcovo/cp-worker#readme"
+}
