@@ -12,8 +12,6 @@ https://transcovo.atlassian.net/browse/TRAN-
 
 ### Checks
 
-- [ ] Documentation of API routes is very clear, even for a newcomer
-- [ ] Documentation of database model fields and indices are very clear, even for a newcomer
 - [ ] Documentation of environment variables is very clear, even for a newcomer
 - [ ] All relevant usecases of are tested
 - [ ] These changes won't cause memory / CPU problems even if business grows by a factor of 100
