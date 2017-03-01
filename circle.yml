@@ -5,13 +5,7 @@ general:
   artifacts:
     - coverage
 dependencies:
-  cache_directories:
-    - mongodb-linux-x86_64-3.2.11
   pre:
-    - if [[ ! -d mongodb-linux-x86_64-3.2.11 ]]; then wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-3.2.11.tgz && tar xvzf mongodb-linux-x86_64-3.2.11.tgz; fi
-    - sudo service mongod stop
-    - sudo cp mongodb-linux-x86_64-3.2.11/bin/* /usr/bin
-    - sudo service mongod start
     - sudo service rabbitmq-server start
 test:
   pre:

@@ -4,6 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/transcovo/cp-amqp-worker/badge.svg?t=pv91nK)](https://coveralls.io/github/transcovo/cp-amqp-worker)
 
 ### Initialization
+```javascript
     function* handle(msg) { ... };
     function* validate(msg) { ... };
     
@@ -18,20 +19,22 @@
         },
         {
             validator: validate,
-            channelPrefetch: 50
+            channelPrefetch: 50,
+            taskTimeout: 30000,
+            processExitTimeout: 3000
         }
     );
-
+```
 ### Basic use
 
 To listen on channel:
-
+```javascript
     yield worker.listen();
-
+```
 To shutdown worker:
-
+```javascript
     yield worker.close();
-
+```
 ### Dev Requirements
 
 Install Node 6.
