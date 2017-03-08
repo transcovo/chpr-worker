@@ -1,0 +1,14 @@
+machine:
+  node:
+    version: 6.10.0
+general:
+  artifacts:
+    - coverage
+dependencies:
+  pre:
+    - sudo service rabbitmq-server start
+test:
+  pre:
+    - mocha-only-detector-glob 'test/**/*.js'
+  post:
+    - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js || echo 'Sending coverage failed'
