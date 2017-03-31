@@ -7,8 +7,9 @@ general:
 dependencies:
   pre:
     - sudo service rabbitmq-server start
+    - npm install -g codecov
 test:
   pre:
     - mocha-only-detector-glob 'test/**/*.js'
   post:
-    - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js || echo 'Sending coverage failed'
+    - codecov -t $CODECOV_TOKEN || echo 'Sending coverage failed'
