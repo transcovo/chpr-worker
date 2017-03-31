@@ -6,11 +6,9 @@ chpr-worker allows you to easily create a worker that take tasts from an AMQP qu
 - Number of tasks handled at the same time
 - Timeout after which the task is considered as failed
 - Handle disconnections from the AMQP server
-- Validating the schema
+- Validating the schema of the message specifying the task
 
-### Initialization
-
-
+Example:
 
 ```javascript
     function* handle(msg) { ... };
