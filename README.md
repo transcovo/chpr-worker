@@ -1,7 +1,17 @@
-# cp-amqp-worker
+# chpr-worker
 [![CircleCI](https://circleci.com/gh/transcovo/chpr-worker.svg?style=shield)](https://circleci.com/gh/transcovo/chpr-worker)
 [![codecov](https://codecov.io/gh/transcovo/chpr-worker/branch/master/graph/badge.svg)](https://codecov.io/gh/transcovo/chpr-worker)
+
+chpr-worker allows you to easily create a worker that take tasts from an AMQP queue. It handles common concerns related to implementing a worker with AMQP:
+- Number of tasks handled at the same time
+- Timeout after which the task is considered as failed
+- Handle disconnections from the AMQP server
+- Validating the schema
+
 ### Initialization
+
+
+
 ```javascript
     function* handle(msg) { ... };
     function* validate(msg) { ... };
