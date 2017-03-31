@@ -15,8 +15,7 @@
     "chpr-metrics": "1.1.0",
     "co": "4.6.0",
     "joi": "10.2.1",
-    "lodash": "4.14.2",
-    "throng": "4.0.0"
+    "lodash": "4.14.2"
   },
   "devDependencies": {
     "chai": "3.5.0",
