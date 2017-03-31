@@ -1,8 +1,6 @@
 # cp-amqp-worker
-
-[![CircleCI](https://circleci.com/gh/transcovo/cp-amqp-worker.svg?style=svg&circle-token=ad4d2569df66189b49c841eb8177570d6aeec73f)](https://circleci.com/gh/transcovo/cp-amqp-worker)
-[![Coverage Status](https://coveralls.io/repos/github/transcovo/cp-amqp-worker/badge.svg?t=pv91nK)](https://coveralls.io/github/transcovo/cp-amqp-worker)
-
+[![CircleCI](https://circleci.com/gh/transcovo/chpr-worker.svg?style=shield)](https://circleci.com/gh/transcovo/chpr-worker)
+[![codecov](https://codecov.io/gh/transcovo/chpr-worker/branch/master/graph/badge.svg)](https://codecov.io/gh/transcovo/chpr-worker)
 ### Initialization
 ```javascript
     function* handle(msg) { ... };
