@@ -1,5 +1,5 @@
 {
-  "name": "@chauffeur-prive/cp-amqp-worker",
+  "name": "chpr-worker",
   "version": "1.0.0",
   "description": "AMQP worker library",
   "main": "index.js",
@@ -47,7 +47,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/transcovo/cp-amqp-worker.git",
+    "url": "git+https://github.com/transcovo/chpr-worker.git",
     "private": true
   },
   "keywords": [
@@ -58,7 +58,7 @@
   "author": "Transcovo",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/transcovo/cp-amqp-worker/issues"
+    "url": "https://github.com/transcovo/chpr-worker/issues"
   },
-  "homepage": "https://github.com/transcovo/cp-amqp-worker#readme"
+  "homepage": "https://github.com/transcovo/chpr-worker#readme"
 }
