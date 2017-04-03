@@ -90,7 +90,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer('test'));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       expect(logger.warn).to.have.callCount(1);
       yield worker.close(false);
     });
@@ -119,7 +119,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent)));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       expect(validatorCalled).to.be.true();
       expect(workerCalled).to.be.true();
       yield worker.close(false);
@@ -151,7 +151,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       expect(validatorCalled).to.be.true();
       expect(workerCalled).to.be.false();
       expect(logger.warn.called).to.be.true();
@@ -177,11 +177,29 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       expect(workerCalled).to.be.true();
       yield worker.close(false);
       const message = yield channel.get(queueName);
       expect(message).to.be.false();
+    });
+
+    it('should perform url resolution correctly', function* test() {
+      const connectStub = sandbox.spy(amqplib, 'connect');
+      const worker = workerlib.createWorker(
+        () => null,
+        {
+          workerName,
+          amqpUrl,
+          exchangeName,
+          queueName,
+          routingKey
+        }
+      );
+      yield worker.listen();
+      yield worker.close(false);
+      const url = connectStub.firstCall.args[0];
+      expect(url).to.equal('amqp://guest:guest@localhost:5672?heartbeat=10');
     });
 
     it('should retry to handle message once on error catched', function* test() {
@@ -201,7 +219,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       yield worker.close(false);
       expect(logger.warn.calledWithMatch(
         { workerName },
@@ -228,7 +246,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 1000);
+      yield cb => setTimeout(cb, 100);
       yield worker.close(false);
       expect(logger.warn.calledWithMatch(
         { workerName },
@@ -246,7 +264,7 @@ describe('Worker library', () => {
   describe('#_promisifyWithTimeout', () => {
     it('should timeout if promise is taking too long', function* test() {
       let error;
-      const neverResolved = new Promise(resolve => setTimeout(resolve, 1000));
+      const neverResolved = new Promise(resolve => setTimeout(resolve, 100));
       try {
         yield workerlib._promisifyWithTimeout(neverResolved, 'test', 100);
       } catch (err) {
