@@ -39,7 +39,8 @@ To listen on channel:
 ```
 To shutdown worker:
 ```javascript
-    yield worker.close();
+    const forceExit = false; // forceExit if true (default), will force a process exit after configured timeout
+    yield worker.close(forceExit);
 ```
 ### Dev Requirements
 
