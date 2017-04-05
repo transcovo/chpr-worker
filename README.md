@@ -13,7 +13,7 @@ Example:
 ```javascript
     function* handle(msg) { ... };
     function* validate(msg) { ... };
-    
+
     const worker = workerlib.createWorker(
         handle,
         {
@@ -39,7 +39,12 @@ To listen on channel:
 ```
 To shutdown worker:
 ```javascript
-    yield worker.close();
+    worker.close();
+```
+Remark: for testing purpose, as the close function will execute a process.exit, you can
+add the following parameter to the close function:
+```javascript
+    worker.close(false);
 ```
 ### Dev Requirements
 
@@ -52,4 +57,3 @@ For nvm users, just move to the project directory and run :
 If you already have installed Node 6 before, just type:
 
     nvm use
-
