@@ -38,7 +38,7 @@ describe('Worker library', () => {
   });
 
   describe('#createWorker', () => {
-    it('should return an object with connection and channel', function* test() {
+    it('should return an object with connection and channel (legacy)', function* test() {
       const worker = workerlib.createWorker(() => {
       }, {
         workerName,
@@ -46,6 +46,21 @@ describe('Worker library', () => {
         exchangeName,
         queueName,
         routingKey
+      });
+      expect(worker).to.have.all.keys(['listen', 'close']);
+      expect(worker.listen).to.be.a('function');
+      expect(worker.close).to.be.a('function');
+    });
+
+    it('should return an object with connection and channel', function* test() {
+      const worker = workerlib.createWorker([{
+        handle: () => {},
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
       });
       expect(worker).to.have.all.keys(['listen', 'close']);
       expect(worker.listen).to.be.a('function');
@@ -60,14 +75,15 @@ describe('Worker library', () => {
       let error;
       let worker;
       try {
-        worker = workerlib.createWorker(
-          () => true, {
-            workerName,
-            amqpUrl,
-            exchangeName,
-            queueName,
-            routingKey
-          });
+        worker = workerlib.createWorker([{
+          handle: () => true,
+          routingKey
+        }], {
+          workerName,
+          amqpUrl,
+          exchangeName,
+          queueName
+        });
         yield worker.listen();
       } catch (err) {
         error = err;
@@ -76,18 +92,18 @@ describe('Worker library', () => {
       expect(logger.error).to.have.callCount(1);
       yield worker.close(false);
     });
+
     it('should log and discard message if invalid JSON', function* test() {
       sandbox.spy(logger, 'warn');
-      const worker = workerlib.createWorker(
-        () => true,
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
-        }
-      );
+      const worker = workerlib.createWorker([{
+        handle: () => true,
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer('test'));
       yield cb => setTimeout(cb, 100);
@@ -95,28 +111,25 @@ describe('Worker library', () => {
       yield worker.close(false);
     });
 
-    it('should call message validation if provided in options', function* test() {
+    it('should call message validation if provided', function* test() {
       let validatorCalled = false;
       let workerCalled = false;
-      const worker = workerlib.createWorker(
-        function* handle() {
+      const worker = workerlib.createWorker([{
+        handle: function* handle() {
           workerCalled = true;
           return true;
         },
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
+        validate: () => {
+          validatorCalled = true;
+          return true;
         },
-        {
-          validator: () => {
-            validatorCalled = true;
-            return true;
-          }
-        }
-      );
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      }, {});
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent)));
       yield cb => setTimeout(cb, 100);
@@ -129,26 +142,24 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       let validatorCalled = false;
       let workerCalled = false;
-      const worker = workerlib.createWorker(
-        function* handle() {
+      const worker = workerlib.createWorker([{
+        handle: function* handle() {
           workerCalled = true;
           return true;
         },
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
+        validate: () => {
+          validatorCalled = true;
+          throw new Error('validator error test');
         },
-        {
-          validator: () => {
-            validatorCalled = true;
-            throw new Error('validator error test');
-          },
-          processExitTimeout: 5000
-        }
-      );
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      }, {
+        processExitTimeout: 5000
+      });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
       yield cb => setTimeout(cb, 100);
@@ -161,6 +172,68 @@ describe('Worker library', () => {
     });
 
     it('should call provided handler and ack if handler runs ok', function* test() {
+      let workerCalled = false;
+      const worker = workerlib.createWorker(
+        [{
+          handle: function* handle() {
+            workerCalled = true;
+            return true;
+          },
+          routingKey
+        }],
+        {
+          workerName,
+          amqpUrl,
+          exchangeName,
+          queueName
+        }
+      );
+      yield worker.listen();
+      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
+      yield cb => setTimeout(cb, 100);
+      expect(workerCalled).to.be.true();
+      yield worker.close(false);
+      const message = yield channel.get(queueName);
+      expect(message).to.be.false();
+    });
+
+    it('should call provided handlers and ack if handlers runs ok', function* test() {
+      let worker1Called = false;
+      let worker2Called = false;
+      const routingKey2 = `${routingKey}_2`;
+      const worker = workerlib.createWorker(
+        [{
+          handle: function* handle() {
+            worker1Called = true;
+            return true;
+          },
+          routingKey
+        }, {
+          handle: function* handle() {
+            worker2Called = true;
+            return true;
+          },
+          routingKey: routingKey2
+        }],
+        {
+          workerName,
+          amqpUrl,
+          exchangeName,
+          queueName
+        }
+      );
+      yield worker.listen();
+      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
+      channel.publish(exchangeName, routingKey2, new Buffer(JSON.stringify(messageContent2)));
+      yield cb => setTimeout(cb, 100);
+      expect(worker1Called).to.be.true();
+      expect(worker2Called).to.be.true();
+      yield worker.close(false);
+      const message = yield channel.get(queueName);
+      expect(message).to.be.false();
+    });
+
+    it('should call provided handler and ack if handler runs ok (legacy)', function* test() {
       let workerCalled = false;
       const worker = workerlib.createWorker(
         function* handle() {
@@ -186,16 +259,15 @@ describe('Worker library', () => {
 
     it('should perform url resolution correctly', function* test() {
       const connectStub = sandbox.spy(amqplib, 'connect');
-      const worker = workerlib.createWorker(
-        () => null,
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
-        }
-      );
+      const worker = workerlib.createWorker([{
+        handle: () => null,
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      });
       yield worker.listen();
       yield worker.close(false);
       const url = connectStub.firstCall.args[0];
@@ -207,16 +279,15 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       handlerStub.onFirstCall().throws();
       handlerStub.onSecondCall().returns(true);
-      const worker = workerlib.createWorker(
-        handlerStub,
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
-        }
-      );
+      const worker = workerlib.createWorker([{
+        handle: handlerStub,
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
       yield cb => setTimeout(cb, 100);
@@ -234,16 +305,15 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       sandbox.spy(logger, 'error');
       handlerStub.throws();
-      const worker = workerlib.createWorker(
-        handlerStub,
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
-        }
-      );
+      const worker = workerlib.createWorker([{
+        handle: handlerStub,
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
       yield cb => setTimeout(cb, 100);
