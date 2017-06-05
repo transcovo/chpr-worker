@@ -6,7 +6,8 @@ const sinon = require('sinon');
 const amqplib = require('amqplib');
 const logger = require('chpr-logger');
 
-const workerlib = require('../../lib/worker');
+const { createWorkers } = require('../../lib/createWorkers');
+const { createWorker } = require('../../lib/createWorker');
 
 const amqpUrl = 'amqp://guest:guest@localhost:5672';
 
@@ -26,12 +27,15 @@ describe('Worker library', () => {
     channel = yield connection.createChannel();
     yield channel.deleteQueue(queueName);
   });
+
   beforeEach(function* beforeEach() {
     yield channel.assertExchange(exchangeName, 'topic');
   });
+
   afterEach(() => {
     sandbox.restore();
   });
+
   after(function* after() {
     yield channel.deleteQueue(queueName);
     yield channel.deleteExchange(exchangeName);
@@ -40,7 +44,7 @@ describe('Worker library', () => {
 
   describe('#createWorker', () => {
     it('should return an object with connection and channel (legacy)', function* test() {
-      const worker = workerlib.createWorker(() => {
+      const worker = createWorker(() => {
       }, {
         workerName,
         amqpUrl,
@@ -54,7 +58,7 @@ describe('Worker library', () => {
     });
 
     it('should return an object with connection and channel', function* test() {
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: () => {},
         validate: _.identity,
         routingKey
@@ -77,7 +81,7 @@ describe('Worker library', () => {
       let error;
       let worker;
       try {
-        worker = workerlib.createWorkers([{
+        worker = createWorkers([{
           handle: () => true,
           validate: _.identity,
           routingKey
@@ -98,7 +102,7 @@ describe('Worker library', () => {
 
     it('should log and discard message if invalid JSON', function* test() {
       sandbox.spy(logger, 'warn');
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: () => true,
         validate: _.identity,
         routingKey
@@ -118,7 +122,7 @@ describe('Worker library', () => {
     it('should call message validation if provided', function* test() {
       let validatorCalled = false;
       let workerCalled = false;
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: function* handle() {
           workerCalled = true;
           return true;
@@ -146,7 +150,7 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       let validatorCalled = false;
       let workerCalled = false;
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: function* handle() {
           workerCalled = true;
           return true;
@@ -179,7 +183,7 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       let validatorCalled = false;
       let workerCalled = false;
-      const worker = workerlib.createWorker(function* handle() {
+      const worker = createWorker(function* handle() {
         workerCalled = true;
         return true;
       }, {
@@ -208,7 +212,7 @@ describe('Worker library', () => {
 
     it('should call provided handler and ack if handler runs ok', function* test() {
       let workerCalled = false;
-      const worker = workerlib.createWorkers(
+      const worker = createWorkers(
         [{
           handle: function* handle() {
             workerCalled = true;
@@ -237,7 +241,7 @@ describe('Worker library', () => {
       let worker1CallParameter = false;
       let worker2CallParameter = false;
       const routingKey2 = `${routingKey}_2`;
-      const worker = workerlib.createWorkers(
+      const worker = createWorkers(
         [{
           handle: function* handle(content) {
             worker1CallParameter = content;
@@ -273,7 +277,7 @@ describe('Worker library', () => {
 
     it('should call provided handler and ack if handler runs ok (legacy)', function* test() {
       let workerCalled = false;
-      const worker = workerlib.createWorker(
+      const worker = createWorker(
         function* handle() {
           workerCalled = true;
           return true;
@@ -297,7 +301,7 @@ describe('Worker library', () => {
 
     it('should perform url resolution correctly', function* test() {
       const connectStub = sandbox.spy(amqplib, 'connect');
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: () => null,
         validate: _.identity,
         routingKey
@@ -318,7 +322,7 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       handlerStub.onFirstCall().throws();
       handlerStub.onSecondCall().returns(true);
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: handlerStub,
         validate: _.identity,
         routingKey
@@ -345,7 +349,7 @@ describe('Worker library', () => {
       sandbox.spy(logger, 'warn');
       sandbox.spy(logger, 'error');
       handlerStub.throws();
-      const worker = workerlib.createWorkers([{
+      const worker = createWorkers([{
         handle: handlerStub,
         validate: _.identity,
         routingKey
@@ -372,85 +376,10 @@ describe('Worker library', () => {
     });
   });
 
-  describe('#_promisifyWithTimeout', () => {
-    it('should timeout if promise is taking too long', function* test() {
-      let error;
-      const neverResolved = new Promise(resolve => setTimeout(resolve, 100));
-      try {
-        yield workerlib._promisifyWithTimeout(neverResolved, 'test', 100);
-      } catch (err) {
-        error = err;
-      }
-      expect(error).to.exist();
-      expect(error.toString()).to.equal('Error: Yieldable timeout in test');
-    });
-  });
-
-  describe('#_subscribeToConnectionEvents', () => {
-    it('should log if connection is blocked', function* test() {
-      sandbox.spy(logger, 'warn');
-      workerlib._subscribeToConnectionEvents(connection, 'test');
-      connection.emit('blocked');
-      expect(logger.warn.calledWithMatch(
-        { workerName }, '[AMQP] Connection blocked')
-      ).to.be.true();
-    });
-
-    it('should log if connection is closing', function* test() {
-      sandbox.spy(logger, 'info');
-      workerlib._subscribeToConnectionEvents(connection, 'test');
-      connection.emit('close');
-      expect(logger.info.calledWithMatch(
-        { workerName }, '[AMQP] Connection closing, exiting')
-      ).to.be.true();
-    });
-
-    it('should log if connection is in error', function* test() {
-      sandbox.spy(logger, 'error');
-      workerlib._subscribeToConnectionEvents(connection, 'test');
-      connection.emit('error');
-      expect(logger.error.calledWithMatch(
-        { workerName }, '[AMQP] Connection closing because of an error')
-      ).to.be.true();
-    });
-  });
-
-  describe('#_subscribeToChannelEvents', () => {
-    it('should log if channel is closed', function* test() {
-      sandbox.spy(logger, 'info');
-      workerlib._subscribeToChannelEvents(channel, {
-        workerName,
-        amqpUrl,
-        exchangeName,
-        queueName,
-        routingKey
-      });
-      channel.emit('close');
-      expect(logger.info.calledWithMatch(
-        { workerName }, '[AMQP] channel closed')
-      ).to.be.true();
-    });
-
-    it('should log if channel is in error', function* test() {
-      sandbox.spy(logger, 'error');
-      workerlib._subscribeToChannelEvents(channel, {
-        workerName,
-        amqpUrl,
-        exchangeName,
-        queueName,
-        routingKey
-      });
-      channel.emit('error');
-      expect(logger.error.calledWithMatch(
-        { workerName }, '[AMQP] channel error')
-      ).to.be.true();
-    });
-  });
-
   describe('forceExit parameter setting', () => {
     it('should forcefully exit process on worker close', function* test() {
       sandbox.stub(process, 'exit');
-      const worker = workerlib.createWorker(() => {
+      const worker = createWorker(() => {
       }, {
         workerName,
         amqpUrl,

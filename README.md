@@ -14,7 +14,7 @@ Example:
     function* handle(msg) { ... };
     function* validate(msg) { ... };
 
-    const worker = workerlib.createWorker([{
+    const worker = workerlib.createWorkers([{
       handle: handle,
       validate: validate,
       routingKey: 'test.something_happened'
