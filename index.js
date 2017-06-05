@@ -1,5 +1,9 @@
 'use strict';
 
-const lib = require('./lib/worker');
+const { createWorkers } = require('./lib/createWorkers');
+const { createWorker } = require('./lib/createWorker');
 
-module.exports = lib;
+module.exports = {
+  createWorker,
+  createWorkers
+};
