@@ -39,10 +39,10 @@
     "supertest": "1.2.0"
   },
   "scripts": {
-    "pretest": "npm run lint",
+    "posttest": "npm run lint",
     "test": "nyc _mocha -b",
     "mocha": "_mocha -b",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "doc": "./node_modules/jsdoc/jsdoc.js --configure .jsdoc.json -R README.md ./lib"
   },
   "repository": {
