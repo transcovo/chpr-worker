@@ -45,7 +45,7 @@ describe('Lib', () => {
   describe('#promisifyWithTimeout', () => {
     it('should timeout if promise is taking too long', function* test() {
       let error;
-      const neverResolved = new Promise(resolve => setTimeout(resolve, 100));
+      const neverResolved = new Promise(() => {});
       try {
         yield promisifyWithTimeout(neverResolved, 'test', 100);
       } catch (err) {
