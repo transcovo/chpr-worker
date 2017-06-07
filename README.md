@@ -8,6 +8,12 @@ chpr-worker allows you to easily create a worker that take tasks from an AMQP qu
 - Handle disconnections from the AMQP server
 - Validating the schema of the message specifying the task
 
+**WARNING**
+
+The `queueName` configuration must be unique for each worker, otherwise messages won't necessarily be routed to the good consumer.
+
+When listening, the lib will create a queue of the form `queueName.routingKey` for each routing key/handler. That is why the queueName config must really be unique, typically of the form `application.workername`. This will generate a unique queue name per routing key, of the form `application.workername.routingkey`.
+
 Example:
 
 ```javascript

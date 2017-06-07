@@ -18,7 +18,6 @@ describe('Lib', () => {
   const workerName = 'test';
   const queueName = 'test.test_watcher';
   const exchangeName = 'testexchange';
-  const routingKey = 'test.something_happened';
   const sandbox = sinon.sandbox.create();
   let connection;
   let channel;
@@ -93,8 +92,7 @@ describe('Lib', () => {
         workerName,
         amqpUrl,
         exchangeName,
-        queueName,
-        routingKey
+        queueName
       });
       channel.emit('close');
       expect(logger.info.calledWithMatch(
@@ -108,8 +106,7 @@ describe('Lib', () => {
         workerName,
         amqpUrl,
         exchangeName,
-        queueName,
-        routingKey
+        queueName
       });
       channel.emit('error');
       expect(logger.error.calledWithMatch(

@@ -16,6 +16,7 @@ describe('Worker library', () => {
   const queueName = 'test.test_watcher';
   const exchangeName = 'testexchange';
   const routingKey = 'test.something_happened';
+  const formattedQueueName = `${queueName}.${routingKey}`;
   const messageContent = { test: 'message' };
   const messageContent2 = { test: 'message2' };
   const sandbox = sinon.sandbox.create();
@@ -25,7 +26,7 @@ describe('Worker library', () => {
   before(function* before() {
     connection = yield amqplib.connect(amqpUrl);
     channel = yield connection.createChannel();
-    yield channel.deleteQueue(queueName);
+    yield channel.deleteQueue(formattedQueueName);
   });
 
   beforeEach(function* beforeEach() {
@@ -37,7 +38,7 @@ describe('Worker library', () => {
   });
 
   after(function* after() {
-    yield channel.deleteQueue(queueName);
+    yield channel.deleteQueue(formattedQueueName);
     yield channel.deleteExchange(exchangeName);
     yield connection.close();
   });
@@ -175,7 +176,7 @@ describe('Worker library', () => {
       expect(workerCalled).to.be.false();
       expect(logger.warn.called).to.be.true();
       yield worker.close(false);
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -206,7 +207,7 @@ describe('Worker library', () => {
       expect(workerCalled).to.be.false();
       expect(logger.warn.called).to.be.true();
       yield worker.close(false);
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -233,7 +234,7 @@ describe('Worker library', () => {
       yield cb => setTimeout(cb, 100);
       expect(workerCalled).to.be.true();
       yield worker.close(false);
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -271,7 +272,7 @@ describe('Worker library', () => {
       expect(worker1CallParameter).to.deep.equal(messageContent2);
       expect(worker2CallParameter).to.deep.equal({ validated: true });
       yield worker.close(false);
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -295,7 +296,7 @@ describe('Worker library', () => {
       yield cb => setTimeout(cb, 100);
       expect(workerCalled).to.be.true();
       yield worker.close(false);
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -340,7 +341,7 @@ describe('Worker library', () => {
         { workerName },
         '[worker#listen] Message handler failed to process message #1 - retrying one time')
       ).to.be.true();
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
 
@@ -371,7 +372,7 @@ describe('Worker library', () => {
         { workerName },
         '[worker#listen] Consumer handler failed to process message #2 - discard message and fail')
       ).to.be.true();
-      const message = yield channel.get(queueName);
+      const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
     });
   });
