@@ -53,9 +53,18 @@ describe('Worker library', () => {
         queueName,
         routingKey
       });
-      expect(worker).to.have.all.keys(['listen', 'close']);
+      expect(worker).to.have.all.keys([
+        'listen',
+        'close',
+        'wait',
+        'TASK_COMPLETED',
+        'TASK_FAILED',
+        'TASK_RETRIED',
+        'WORKER_CLOSED'
+      ]);
       expect(worker.listen).to.be.a('function');
       expect(worker.close).to.be.a('function');
+      expect(worker.wait).to.be.a('function');
     });
 
     it('should return an object with connection and channel', function* test() {
@@ -69,9 +78,88 @@ describe('Worker library', () => {
         exchangeName,
         queueName
       });
-      expect(worker).to.have.all.keys(['listen', 'close']);
+      expect(worker).to.have.all.keys([
+        'listen',
+        'close',
+        'wait',
+        'TASK_COMPLETED',
+        'TASK_FAILED',
+        'TASK_RETRIED',
+        'WORKER_CLOSED'
+      ]);
       expect(worker.listen).to.be.a('function');
       expect(worker.close).to.be.a('function');
+      expect(worker.wait).to.be.a('function');
+    });
+  });
+
+  describe('#wait', () => {
+    it('should throw an error after the specified timeout', function* test() {
+      const worker = createWorkers([{
+        handle: () => true,
+        validate: _.identity,
+        routingKey
+      }], {
+        workerName,
+        amqpUrl,
+        exchangeName,
+        queueName
+      });
+      let err = null;
+      try {
+        yield worker.wait('kk', 10);
+      } catch (e) {
+        err = e;
+      }
+      expect(err).to.exist();
+      expect(err.toString()).to.equal('Error: event kk didn\'t occur after 10ms');
+      yield worker.close(false);
+    });
+
+    it('should not resolve the promise when the event occurs after the timeout', function* test() {
+      const worker = createWorkers(
+        [{
+          handle: function* handle() {
+            return true;
+          },
+          validate: _.identity,
+          routingKey
+        }],
+        {
+          workerName,
+          amqpUrl,
+          exchangeName,
+          queueName
+        }
+      );
+      yield worker.listen();
+
+      // store the promise for later to check that it's not
+      // modified on the event completion
+      const promise = worker.wait('task.completed', 0);
+
+      let err = null;
+      try {
+        yield promise;
+      } catch (e) {
+        err = e;
+      }
+      expect(err).to.exist();
+
+      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
+      yield worker.wait('task.completed');
+
+      // check that the previously generated promise wasn't affected by the completion of the event
+      // after the timeout
+      err = null;
+      try {
+        yield promise;
+      } catch (e) {
+        err = e;
+      }
+      expect(err).to.exist();
+      expect(err.toString()).to.equal('Error: event task.completed didn\'t occur after 0ms');
+      yield worker.close(false);
     });
   });
 
@@ -115,7 +203,7 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer('test'));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.failed');
       expect(logger.warn).to.have.callCount(1);
       yield worker.close(false);
     });
@@ -141,7 +229,7 @@ describe('Worker library', () => {
       }, {});
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.completed');
       expect(validatorCalled).to.be.true();
       expect(workerCalled).to.be.true();
       yield worker.close(false);
@@ -171,7 +259,7 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.failed');
       expect(validatorCalled).to.be.true();
       expect(workerCalled).to.be.false();
       expect(logger.warn.called).to.be.true();
@@ -202,7 +290,7 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.failed');
       expect(validatorCalled).to.be.true();
       expect(workerCalled).to.be.false();
       expect(logger.warn.called).to.be.true();
@@ -231,7 +319,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.completed');
       expect(workerCalled).to.be.true();
       yield worker.close(false);
       const message = yield channel.get(formattedQueueName);
@@ -268,7 +356,8 @@ describe('Worker library', () => {
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
       channel.publish(exchangeName, routingKey2, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.completed');
+      yield worker.wait('task.completed');
       expect(worker1CallParameter).to.deep.equal(messageContent2);
       expect(worker2CallParameter).to.deep.equal({ validated: true });
       yield worker.close(false);
@@ -293,7 +382,7 @@ describe('Worker library', () => {
       );
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.completed');
       expect(workerCalled).to.be.true();
       yield worker.close(false);
       const message = yield channel.get(formattedQueueName);
@@ -335,7 +424,8 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.retried');
+      yield worker.wait('task.completed');
       yield worker.close(false);
       expect(logger.warn.calledWithMatch(
         { workerName },
@@ -362,7 +452,8 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield cb => setTimeout(cb, 100);
+      yield worker.wait('task.retried');
+      yield worker.wait('task.failed');
       yield worker.close(false);
       expect(logger.warn.calledWithMatch(
         { workerName },
@@ -392,7 +483,7 @@ describe('Worker library', () => {
       });
       yield worker.listen();
       yield worker.close();
-      yield cb => setTimeout(cb, 500);
+      yield worker.wait('worker.closed');
       expect(process.exit.called).to.be.true();
     });
   });

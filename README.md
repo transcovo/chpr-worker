@@ -50,6 +50,35 @@ add the following parameter to the close function:
 ```javascript
     worker.close(false);
 ```
+
+### Events
+
+To organize your own tests, the worker instance allows you to wait for specific event
+with the `wait` method.
+
+Example:
+
+    yield worker.wait(worker.TASK_COMPLETED);
+
+Spec:
+
+    wait(event, timeout)
+
+The wait method returns a Promise which will be completed when the expected event
+occurs for the first time, or rejected after a timeout.
+
+`event`: name of the event, required. Must be one of the available events:
+
+- `worker.TASK_COMPLETED`: emitted when a task has been completed.
+- `worker.TASK_RETRIED`: emitted when a task is going to be retried because the
+ handler has failed.
+- `worker.TASK_FAILED`: emitted when a task has failed because the handler
+ has failed on a task which was already being retried.
+- `worker.WORKER_CLOSED`: emitted when the worker has been closed.
+
+`timeout`: timeout in milliseconds after which the promise will be rejected. Defaults
+to 1000 ms.
+
 ### Dev Requirements
 
 Install Node 6.

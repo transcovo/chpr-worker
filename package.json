@@ -1,6 +1,6 @@
 {
   "name": "chpr-worker",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "AMQP worker library",
   "main": "index.js",
   "engines": {
@@ -42,7 +42,7 @@
     "pretest": "npm run lint",
     "test": "nyc _mocha -b",
     "mocha": "_mocha -b",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "doc": "./node_modules/jsdoc/jsdoc.js --configure .jsdoc.json -R README.md ./lib"
   },
   "repository": {
