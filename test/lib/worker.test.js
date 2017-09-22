@@ -482,8 +482,8 @@ describe('Worker library', () => {
         processExitTimeout: 1
       });
       yield worker.listen();
-      yield worker.close();
-      yield worker.wait('worker.closed');
+      yield worker.close(); // true by default
+      yield cb => setTimeout(cb, 1000);
       expect(process.exit.called).to.be.true();
     });
   });
