@@ -48,7 +48,8 @@ Example:
     }, {
       channelPrefetch: 50,
       taskTimeout: 30000,
-      processExitTimeout: 3000
+      processExitTimeout: 3000,
+      channelCloseTimeout: 500
     });
 ```
 ### Basic use
@@ -66,6 +67,10 @@ add the following parameter to the close function:
 ```javascript
     worker.close(false);
 ```
+
+By default, the `close` method will be called on SIGTERM/SIGINT signals and operate a graceful shutdown.
+If you want to override this behaviour (not recommended for production workers),
+you should specify `closeOnSignals: false` as an option.
 
 ### Events
 
