@@ -7,7 +7,6 @@ const amqplib = require('amqplib');
 const logger = require('chpr-logger');
 
 const { createWorkers } = require('../../lib/createWorkers');
-const { createWorker } = require('../../lib/createWorker');
 
 const amqpUrl = 'amqp://guest:guest@localhost:5672';
 
@@ -43,30 +42,7 @@ describe('Worker library', () => {
     yield connection.close();
   });
 
-  describe('#createWorker', () => {
-    it('should return an object with connection and channel (legacy)', function* test() {
-      const worker = createWorker(() => {
-      }, {
-        workerName,
-        amqpUrl,
-        exchangeName,
-        queueName,
-        routingKey
-      });
-      expect(worker).to.have.all.keys([
-        'listen',
-        'close',
-        'wait',
-        'TASK_COMPLETED',
-        'TASK_FAILED',
-        'TASK_RETRIED',
-        'WORKER_CLOSED'
-      ]);
-      expect(worker.listen).to.be.a('function');
-      expect(worker.close).to.be.a('function');
-      expect(worker.wait).to.be.a('function');
-    });
-
+  describe('#createWorkers', () => {
     it('should return an object with connection and channel', function* test() {
       const worker = createWorkers([{
         handle: () => {},
@@ -268,37 +244,6 @@ describe('Worker library', () => {
       expect(message).to.be.false();
     });
 
-    it('should not call handler and fail if validator throws (legacy)', function* test() {
-      sandbox.spy(logger, 'warn');
-      let validatorCalled = false;
-      let workerCalled = false;
-      const worker = createWorker(function* handle() {
-        workerCalled = true;
-        return true;
-      }, {
-        workerName,
-        amqpUrl,
-        exchangeName,
-        queueName,
-        routingKey
-      }, {
-        validator: () => {
-          validatorCalled = true;
-          throw new Error('validator error test');
-        },
-        processExitTimeout: 5000
-      });
-      yield worker.listen();
-      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield worker.wait('task.failed');
-      expect(validatorCalled).to.be.true();
-      expect(workerCalled).to.be.false();
-      expect(logger.warn.called).to.be.true();
-      yield worker.close(false);
-      const message = yield channel.get(formattedQueueName);
-      expect(message).to.be.false();
-    });
-
     it('should call provided handler and ack if handler runs ok', function* test() {
       let workerCalled = false;
       const worker = createWorkers(
@@ -326,7 +271,7 @@ describe('Worker library', () => {
       expect(message).to.be.false();
     });
 
-    it('should call provided handlers and ack if handlers runs ok', function* test() {
+    it('should call all provided handlers and ack if handlers runs ok', function* test() {
       let worker1CallParameter = false;
       let worker2CallParameter = false;
       const routingKey2 = `${routingKey}_2`;
@@ -336,14 +281,14 @@ describe('Worker library', () => {
             worker1CallParameter = content;
             return true;
           },
-          validate: _.noop,
+          validate: _.identity,
           routingKey
         }, {
           handle: function* handle(content) {
             worker2CallParameter = content;
             return true;
           },
-          validate: () => ({ validated: true }),
+          validate: _.identity,
           routingKey: routingKey2
         }],
         {
@@ -354,36 +299,12 @@ describe('Worker library', () => {
         }
       );
       yield worker.listen();
-      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
+      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent)));
+      yield worker.wait('task.completed');
       channel.publish(exchangeName, routingKey2, new Buffer(JSON.stringify(messageContent2)));
       yield worker.wait('task.completed');
-      yield worker.wait('task.completed');
-      expect(worker1CallParameter).to.deep.equal(messageContent2);
-      expect(worker2CallParameter).to.deep.equal({ validated: true });
-      yield worker.close(false);
-      const message = yield channel.get(formattedQueueName);
-      expect(message).to.be.false();
-    });
-
-    it('should call provided handler and ack if handler runs ok (legacy)', function* test() {
-      let workerCalled = false;
-      const worker = createWorker(
-        function* handle() {
-          workerCalled = true;
-          return true;
-        },
-        {
-          workerName,
-          amqpUrl,
-          exchangeName,
-          queueName,
-          routingKey
-        }
-      );
-      yield worker.listen();
-      channel.publish(exchangeName, routingKey, new Buffer(JSON.stringify(messageContent2)));
-      yield worker.wait('task.completed');
-      expect(workerCalled).to.be.true();
+      expect(worker1CallParameter).to.deep.equal(messageContent);
+      expect(worker2CallParameter).to.deep.equal(messageContent2);
       yield worker.close(false);
       const message = yield channel.get(formattedQueueName);
       expect(message).to.be.false();
@@ -470,21 +391,24 @@ describe('Worker library', () => {
 
   describe('forceExit parameter setting', () => {
     it('should forcefully exit process on worker close', function* test() {
-      sandbox.stub(process, 'exit');
-      const worker = createWorker(() => {
-      }, {
+      const handlerStub = sandbox.stub();
+      const exitStub = sandbox.stub(process, 'exit');
+      const worker = createWorkers([{
+        handle: handlerStub,
+        validate: _.identity,
+        routingKey
+      }], {
         workerName,
         amqpUrl,
         exchangeName,
-        queueName,
-        routingKey
+        queueName
       }, {
         processExitTimeout: 1
       });
       yield worker.listen();
-      yield worker.close();
-      yield worker.wait('worker.closed');
-      expect(process.exit.called).to.be.true();
+      yield worker.close(true);
+      yield cb => setTimeout(cb, 500);
+      expect(exitStub.args).to.deep.equal([[0]]);
     });
   });
 });

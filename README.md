@@ -8,11 +8,27 @@ chpr-worker allows you to easily create a worker that take tasks from an AMQP qu
 - Handle disconnections from the AMQP server
 - Validating the schema of the message specifying the task
 
+**Note:** this package is a wrapper for the **[stakhanov](https://www.npmjs.com/package/stakhanov)** open-source package. It only adds our logger via 
+dependency injection. For up-to-date documentation, please consult the stakhanov project's [repository](https://github.com/ChauffeurPrive/stakhanov).
+
+**BREAKING CHANGE with version >= 2.x**
+
+It is not possible anymore to create a single worker by calling `createWorker`:
+```javascript
+    const worker = workerlib.createWorker({...});
+```
+
+You should use `createWorkers` for all worker creations.
+
 **WARNING**
 
-The `queueName` configuration must be unique for each worker, otherwise messages won't necessarily be routed to the good consumer.
+The `queueName` configuration must be unique for each worker, otherwise messages won't necessarily 
+be routed to the good consumer.
 
-When listening, the lib will create a queue of the form `queueName.routingKey` for each routing key/handler. That is why the queueName config must really be unique, typically of the form `application.workername`. This will generate a unique queue name per routing key, of the form `application.workername.routingkey`.
+When listening, the lib will create a queue of the form `queueName.routingKey` for each routing 
+key/handler. That is why the queueName config must really be unique, typically of the form 
+`application.workername`. This will generate a unique queue name per routing key, of the form 
+`application.workername.routingkey`.
 
 Example:
 
