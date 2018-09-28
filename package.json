@@ -1,18 +1,18 @@
 {
   "name": "chpr-worker",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "AMQP worker library",
   "main": "index.js",
   "engines": {
-    "node": "6.10.0"
+    "node": ">=6.10.0"
   },
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "chpr-logger": "2.4.1",
-    "lodash": "4.14.2",
-    "stakhanov": "0.3.2"
+    "chpr-logger": "2.8.0",
+    "lodash": "4.17.11",
+    "stakhanov": "0.4.0"
   },
   "devDependencies": {
     "chai": "3.5.0",
@@ -22,16 +22,16 @@
     "eslint-config-airbnb": "9.0.1",
     "eslint-config-cp": "1.4.0",
     "eslint-plugin-import": "1.14.0",
-    "nyc": "10.0.0",
     "jsdoc": "3.4.0",
     "minami": "1.1.1",
-    "mocha": "3.0.2",
+    "mocha": "5.2.0",
     "mocha-only-detector": "0.1.0",
+    "nyc": "13.1.0",
     "objectid": "3.2.1",
     "sinon": "1.17.5",
     "sinon-chai": "2.8.0",
-    "superagent": "1.7.2",
-    "supertest": "1.2.0"
+    "superagent": "3.8.3",
+    "supertest": "3.3.0"
   },
   "scripts": {
     "pretest": "npm run lint",
