@@ -1,8 +1,128 @@
 version: 2
 jobs:
-  test:
+  test_min:
     docker:
-      - image: node:6.11
+      - image: node:6.10
+      - image: rabbitmq:3.4
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm i
+      - save_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+            - /root/.npm
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+
+  test_v6:
+    docker:
+      - image: node:6
+      - image: rabbitmq:3.4
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm i
+      - save_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+            - /root/.npm
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+
+  test_v7:
+    docker:
+      - image: node:7
+      - image: rabbitmq:3.4
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm i
+      - save_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+            - /root/.npm
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+
+  test_v8:
+    docker:
+      - image: node:8
+      - image: rabbitmq:3.4
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm i
+      - save_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+            - /root/.npm
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+
+  test_v9:
+    docker:
+      - image: node:9
+      - image: rabbitmq:3.4
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Install node modules
+          command: npm i
+      - save_cache:
+          key: dependency-cache-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+            - /root/.npm
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+
+  test_v10:
+    docker:
+      - image: node:10
       - image: rabbitmq:3.4
 
     steps:
@@ -28,4 +148,9 @@ workflows:
   version: 2
   test:
     jobs:
-      - test
+      - test_min
+      - test_v6
+      - test_v7
+      - test_v8
+      - test_v9
+      - test_v10
