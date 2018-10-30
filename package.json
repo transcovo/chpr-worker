@@ -12,7 +12,7 @@
   "dependencies": {
     "chpr-logger": "2.8.0",
     "lodash": "4.17.11",
-    "stakhanov": "0.4.0"
+    "stakhanov": "0.5.0"
   },
   "devDependencies": {
     "chai": "3.5.0",
