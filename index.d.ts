@@ -22,11 +22,10 @@ declare namespace Worker {
         WORKER_CLOSED: string;
     }
 
-    // T is the message received from the bus, U the message after validation
-    export interface Handler<T = any, U = any> {
+    export interface Handler<TBusMessage = any, TValidatedMessage = any> {
         routingKey: string;
-        validate: (message: T) => U;
-        handle: (message: U) => void;
+        validate: (message: TBusMessage) => TValidatedMessage;
+        handle: (message: TValidatedMessage) => void;
     }
 
     export interface Config {
