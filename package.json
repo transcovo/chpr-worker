@@ -1,6 +1,6 @@
 {
   "name": "chpr-worker",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "AMQP worker library",
   "main": "index.js",
   "engines": {
@@ -10,9 +10,9 @@
     "test": "test"
   },
   "dependencies": {
-    "chpr-logger": "2.8.0",
+    "chpr-logger": "2.9.0",
     "lodash": "4.17.11",
-    "stakhanov": "0.6.0"
+    "stakhanov": "0.7.1"
   },
   "devDependencies": {
     "chai": "3.5.0",
