@@ -6,7 +6,7 @@
 /// <reference types="node" />
 
 
-import Stakhanov = require("stakhanov");
+import Stakhanov = require('stakhanov');
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
